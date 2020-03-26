@@ -4,5 +4,5 @@ runtime: python27
 api_version: 1
 threadsafe: false
 handlers:
-- url: /.*
+- url: /
   script: hello.py

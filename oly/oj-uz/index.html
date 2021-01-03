@@ -155,42 +155,45 @@
 		}
 	}
 	for(id in problems){
-		for(var i=1;i<5;i+=1){
-			fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('https://oj.uz/submissions?page='+i+'&problem='+problems[id])}`).then(response => {
-				if (response.ok) return response.json()
+		for(var i=1;i<5;i+=1){	
+			try {	
+				fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('https://oj.uz/submissions?page='+i+'&problem='+problems[id])}`).then(response => {
+					if (response.ok) return response.json()
+						add_finish();
+						throw new Error('Network response was not ok.')
+				}).then(function(id, data) {
+					var parser = new DOMParser();
+					var doc = parser.parseFromString(data.contents, 'text/html');
+					let table=doc.getElementsByClassName("table table-striped table-condensed")[0].getElementsByTagName("tbody")[0];
+
+
+					for(uid in users){
+						user=users[uid];
+						if(typeof  scoreboard[user] == 'undefined'){
+							scoreboard[user]={};
+						}
+					}
+
+					for(let row of table.rows){
+						let user=row.cells[2].innerText.toLowerCase().trim();
+						if (!users.includes(user)){
+							continue;
+						}
+						let score=parseInt(row.getElementsByClassName("text")[0].innerText.split(' ')[0]);
+						if(typeof  scoreboard[user][id] == 'undefined'){
+							scoreboard[user][id]=0;
+						}
+						scoreboard[user][id]=Math.max(scoreboard[user][id],score);
+					}
 					add_finish();
-					throw new Error('Network response was not ok.')
-			}).then(function(id, data) {
-				var parser = new DOMParser();
-				var doc = parser.parseFromString(data.contents, 'text/html');
-				let table=doc.getElementsByClassName("table table-striped table-condensed")[0].getElementsByTagName("tbody")[0];
-
-
-				for(uid in users){
-					user=users[uid];
-					if(typeof  scoreboard[user] == 'undefined'){
-						scoreboard[user]={};
-					}
-				}
-
-				for(let row of table.rows){
-					let user=row.cells[2].innerText.toLowerCase().trim();
-					if (!users.includes(user)){
-						continue;
-					}
-					let score=parseInt(row.getElementsByClassName("text")[0].innerText.split(' ')[0]);
-					if(typeof  scoreboard[user][id] == 'undefined'){
-						scoreboard[user][id]=0;
-					}
-					scoreboard[user][id]=Math.max(scoreboard[user][id],score);
-				}
-				add_finish();
-			}.bind(null, id));
+				}.bind(null, id));
+			}
+			catch(err) {
+			  document.getElementById("demo").innerHTML = err.message;
+			}
 		}
 	}
 
 	</script>
 </body>
 </html>
-
-

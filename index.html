@@ -1,0 +1,194 @@
+<html>
+<head>
+	
+    <title>رتبه بندی</title>
+    <meta charset="utf-8">
+    <style>
+    html,
+	body {
+		height: 100%;
+	}
+
+	body {
+		margin: 0;
+		background: linear-gradient(45deg, #49a09d, #5f2c82);
+		font-family: sans-serif;
+		font-weight: 100;
+	}
+
+	.container {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+	}
+
+	table {
+		width: 800px;
+		border-collapse: collapse;
+		overflow: hidden;
+		box-shadow: 0 0 20px rgba(0,0,0,0.1);
+	}
+
+	th,
+	td {
+		padding: 15px;
+		background-color: rgba(255,255,255,0.2);
+		color: #fff;
+	}
+
+	th {
+		text-align: left;
+	}
+
+	thead {
+		th {
+			background-color: #55608f;
+		}
+	}
+
+	tbody {
+		tr {
+			&:hover {
+				background-color: rgba(255,255,255,0.3);
+			}
+		}
+		td {
+			position: relative;
+			&:hover {
+				&:before {
+					content: "";
+					position: absolute;
+					left: 0;
+					right: 0;
+					top: -9999px;
+					bottom: -9999px;
+					background-color: rgba(255,255,255,0.2);
+					z-index: -1;
+				}
+			}
+		}
+	}th {
+		background-color: #55608f;
+	}
+    
+    </style>
+    
+    
+</head>
+<body>
+	<div class="container">
+		<table id="scoreboard" class="responsive-table">
+		</table>
+	</div>
+	<script>
+	const queryString = window.location.search;
+
+	const urlParams = new URLSearchParams(queryString);
+
+	const problems_inout = urlParams.get('problems')
+	var problems = problems_inout.split(",");
+
+	const users_inout = urlParams.get('users')
+	var users = users_inout.split(",");
+	for(id in users){
+		users[id]=users[id].toLowerCase().trim(); 
+	}
+	var lp=problems.length;
+
+	var scoreboard={};
+
+
+	function row_sum(row){
+		var sum=0;
+		for(id in row){
+			sum+=row[id];
+		}
+		return sum;
+	}
+
+	function add_finish(){
+		lp-=1;
+		if(lp==0){
+			var sb = Object.keys(scoreboard).map(function(key) {
+				return [key, scoreboard[key]];
+			});
+			sb.sort(function(r1, r2){
+				return row_sum(r1[1])-row_sum(r2[1]);
+			});
+			var table= document.getElementById('scoreboard');
+			table.border = "1";
+			for(uid in sb){
+				user=sb[uid][0];
+				var row=table.insertRow(0);
+				var headerCell = document.createElement("TD");
+				headerCell.innerText = user;
+				row.appendChild(headerCell);
+				for(pid in problems){
+					if(typeof  scoreboard[user] == 'undefined'){
+						scoreboard[user]={};
+					}
+					if(typeof  scoreboard[user][pid] == 'undefined'){
+						scoreboard[user][pid]=0;
+					}
+					var headerCell = document.createElement("TD");
+					console.log(user);
+					console.log(scoreboard[user][pid]);
+					headerCell.innerText = ""+scoreboard[user][pid];
+					row.appendChild(headerCell);
+				}
+			}
+
+
+			var row=table.insertRow(0);
+			var headerCell = document.createElement("TH");
+			headerCell.innerText = "User: ";
+			row.appendChild(headerCell);
+
+			for(id in problems){
+				var headerCell = document.createElement("TH");
+				headerCell.innerText = problems[id];
+				row.appendChild(headerCell);
+			}
+
+			console.log(scoreboard);
+		}
+	}
+
+	for(id in problems){
+		fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('https://oj.uz/submissions?problem='+problems[id])}`).then(response => {
+			if (response.ok) return response.json()
+				throw new Error('Network response was not ok.')
+		}).then(function(id, data) {
+			var parser = new DOMParser();
+			var doc = parser.parseFromString(data.contents, 'text/html');
+			let table=doc.getElementsByClassName("table table-striped table-condensed")[0].getElementsByTagName("tbody")[0];
+			
+			
+			for(uid in users){
+				user=users[uid];
+				if(typeof  scoreboard[user] == 'undefined'){
+					scoreboard[user]={};
+				}
+			}
+			
+			for(let row of table.rows){
+				let user=row.cells[2].innerText.toLowerCase().trim();
+				if (!users.includes(user)){
+					continue;
+				}
+				let score=parseInt(row.getElementsByClassName("text")[0].innerText.split(' ')[0]);
+				if(typeof  scoreboard[user][id] == 'undefined'){
+					scoreboard[user][id]=0;
+				}
+				scoreboard[user][id]=Math.max(scoreboard[user][id],score);
+			}
+			add_finish();
+		}.bind(null, id));
+	}
+
+	</script>
+</body>
+</html>
+
+

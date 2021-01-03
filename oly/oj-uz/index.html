@@ -94,7 +94,7 @@
 	for(id in users){
 		users[id]=users[id].toLowerCase().trim(); 
 	}
-	var lp=problems.length;
+	var lp=problems.length*4;
 
 	var scoreboard={};
 
@@ -154,37 +154,38 @@
 			console.log(scoreboard);
 		}
 	}
+	for(var i=0;i<4;i+=1){
+		for(id in problems){
+			fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('https://oj.uz/submissions?page='+i+'problem='+problems[id])}`).then(response => {
+				if (response.ok) return response.json()
+					throw new Error('Network response was not ok.')
+			}).then(function(id, data) {
+				var parser = new DOMParser();
+				var doc = parser.parseFromString(data.contents, 'text/html');
+				let table=doc.getElementsByClassName("table table-striped table-condensed")[0].getElementsByTagName("tbody")[0];
 
-	for(id in problems){
-		fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('https://oj.uz/submissions?problem='+problems[id])}`).then(response => {
-			if (response.ok) return response.json()
-				throw new Error('Network response was not ok.')
-		}).then(function(id, data) {
-			var parser = new DOMParser();
-			var doc = parser.parseFromString(data.contents, 'text/html');
-			let table=doc.getElementsByClassName("table table-striped table-condensed")[0].getElementsByTagName("tbody")[0];
-			
-			
-			for(uid in users){
-				user=users[uid];
-				if(typeof  scoreboard[user] == 'undefined'){
-					scoreboard[user]={};
+
+				for(uid in users){
+					user=users[uid];
+					if(typeof  scoreboard[user] == 'undefined'){
+						scoreboard[user]={};
+					}
 				}
-			}
-			
-			for(let row of table.rows){
-				let user=row.cells[2].innerText.toLowerCase().trim();
-				if (!users.includes(user)){
-					continue;
+
+				for(let row of table.rows){
+					let user=row.cells[2].innerText.toLowerCase().trim();
+					if (!users.includes(user)){
+						continue;
+					}
+					let score=parseInt(row.getElementsByClassName("text")[0].innerText.split(' ')[0]);
+					if(typeof  scoreboard[user][id] == 'undefined'){
+						scoreboard[user][id]=0;
+					}
+					scoreboard[user][id]=Math.max(scoreboard[user][id],score);
 				}
-				let score=parseInt(row.getElementsByClassName("text")[0].innerText.split(' ')[0]);
-				if(typeof  scoreboard[user][id] == 'undefined'){
-					scoreboard[user][id]=0;
-				}
-				scoreboard[user][id]=Math.max(scoreboard[user][id],score);
-			}
-			add_finish();
-		}.bind(null, id));
+				add_finish();
+			}.bind(null, id));
+		}
 	}
 
 	</script>

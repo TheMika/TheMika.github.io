@@ -154,9 +154,9 @@
 			console.log(scoreboard);
 		}
 	}
-	for(var i=0;i<4;i+=1){
-		for(id in problems){
-			fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('https://oj.uz/submissions?page='+i+'problem='+problems[id])}`).then(response => {
+	for(id in problems){
+		for(var i=0;i<4;i+=1){
+			fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('https://oj.uz/submissions?page='+i+'&problem='+problems[id])}`).then(response => {
 				if (response.ok) return response.json()
 					throw new Error('Network response was not ok.')
 			}).then(function(id, data) {
